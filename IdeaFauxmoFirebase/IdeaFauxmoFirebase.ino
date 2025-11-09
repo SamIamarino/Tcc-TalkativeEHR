@@ -57,7 +57,7 @@ void setup() {
     Serial.print(".");
     delay(300);
   }
-  Serial.println("\n✅ Wi-Fi Connected!");
+  Serial.println("\n Wi-Fi Connected!");
   Serial.println(WiFi.localIP());
 
   // SSL for Firebase
@@ -106,7 +106,7 @@ void sendSensorData() {
   int lightLevel = analogRead(LDRPIN);
 
   if (isnan(temperature) || isnan(humidity)) {
-    Serial.println("⚠️ Failed to read DHT11 data!");
+    Serial.println(" Failed to read DHT11 data!");
     return;
   }
 
