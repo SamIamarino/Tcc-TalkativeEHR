@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,6 +9,7 @@
   <body>
     <div class="wrapper">
       <div class="main-container">
+
         <!-- container esquerda -->
         <div class="pacient-container">
           <div class="spacer-xl"></div>
@@ -19,195 +20,130 @@
 
           <div class="spacer-xl"></div>
 
-          <!-- PRIMEIRO CARD -->
+          <!-- PRIMEIRO CARD — Paciente -->
           <div class="pacient-personal-information user-card">
-                <div class="img-name-container">
-                <div class="user-profile-wrapper">
-                    <img
-                    src="./assets/Weezer_-_Blue_Album.jpg  "
-                    alt="imagem do paciente"
-                    class="profile-img"
-                    />
-                </div>
-                <div class="user-information-wrapper">
-                    <h4 class="title-text">Joao da Silva</h4>
-                    <p class="content-text">Idade 32 anos</p>
-                    <p class="content-text">Leito: 32-b</p>
-                </div>
-                </div>
+            <div class="img-name-container">
+              <div class="user-profile-wrapper">
+                <img
+                  src="./assets/Weezer_-_Blue_Album.jpg"
+                  alt="imagem do paciente"
+                  class="profile-img"
+                />
+              </div>
+              <div class="user-information-wrapper">
+                <h4 class="title-text" id="paciente-nome">-</h4>
+                <p class="content-text" id="paciente-idade">-</p>
+                <p class="content-text">Leito: <span id="leito-numero">-</span></p>
+              </div>
+            </div>
 
-                <div class="spacer-md"></div>
+            <div class="spacer-md"></div>
 
-                <div class="pacient-status">
-                <div class="circle"></div>
-                <p style="text-align: center">Estavel!</p>
-                </div>
+            <div class="pacient-status">
+              <div class="circle"></div>
+              <p style="text-align: center">Estável</p>
+            </div>
 
-                <div class="spacer-md"></div>
+            <div class="spacer-md"></div>
 
-                <div class="text-shadow-box-container">
-                <p class="content-text">Convenio: Unimed</p>
-                </div>
-                <div class="spacer-md"></div>
-                <div class="text-shadow-box-container red-bg">
-                <p class="content-text block">Diagnostico: Tuberculose</p>
-                </div>
+            <div class="text-shadow-box-container">
+              <p class="content-text">Tipo Sanguíneo: <span id="paciente-sangue">-</span></p>
+            </div>
+            <div class="spacer-md"></div>
+            <div class="text-shadow-box-container">
+              <p class="content-text">Ala: <span id="leito-ala">-</span> | Andar: <span id="leito-andar">-</span></p>
+            </div>
+            <div class="spacer-md"></div>
+            <div class="text-shadow-box-container red-bg">
+              <p class="content-text block">Alergias: <span id="paciente-alergias">-</span></p>
+            </div>
+            <div class="spacer-md"></div>
+            <div class="text-shadow-box-container">
+              <p class="content-text">Internado em: <span id="paciente-internado">-</span></p>
+            </div>
+            <div class="spacer-md"></div>
+            <div class="text-shadow-box-container">
+              <p class="content-text">Emergência: <span id="paciente-contato-emergencia">-</span></p>
+            </div>
+            <div class="spacer-md"></div>
+            <div class="text-shadow-box-container">
+              <p class="content-text">Tel. Emergência: <span id="paciente-telefone-emergencia">-</span></p>
+            </div>
           </div>
 
           <div class="spacer-xl"></div>
-          <!-- <div class="spacer-xl"></div> -->
 
-          <!-- SEGUNDO CARD -->
+          <!-- SEGUNDO CARD — Médico -->
           <div class="pacient-internation-information user-card">
             <div class="img-name-container">
-                <div class="user-profile-wrapper">
-                    <img
-                    src="./assets/Weezer_-_Blue_Album.jpg  "
-                    alt="imagem do paciente"
-                    class="profile-img"
-                    />
-                </div>
-                <div class="user-information-wrapper">
-                    <h4 class="title-text">Joao da Silva</h4>
-                    <p class="content-text">Radiologista</p>
-                    <p class="content-text">Crm: blabla123</p>
-                </div>
-                </div>
-
-                <div class="spacer-md"></div>
-
-                <!-- <div class="pacient-status">
-                <div class="circle"></div>
-                <p style="text-align: center">Estavel!</p>
-                </div> -->
-
-                <div class="spacer-md"></div>
-
-                <div class="text-shadow-box-container">
-                <p class="content-text">Especialidade: Cardio</p>
-                </div>
-                <div class="spacer-md"></div>
-                <div class="text-shadow-box-container red-bg">
-                <p class="content-text block">Diagnostico: Tuberculose</p>
-                </div>
+              <div class="user-profile-wrapper">
+                <img
+                  src="./assets/Weezer_-_Blue_Album.jpg"
+                  alt="médico responsável"
+                  class="profile-img"
+                />
+              </div>
+              <div class="user-information-wrapper">
+                <h4 class="title-text" id="medico-nome">-</h4>
+                <p class="content-text" id="medico-especialidade">-</p>
+                <p class="content-text">Tel: <span id="medico-telefone">-</span></p>
+              </div>
+            </div>
           </div>
 
-          <!-- <div class="spacer-xl"></div> -->
         </div>
 
         <div class="vertical-line-lg"></div>
 
-        <!-- main container  -->
+        <!-- coluna do meio — evoluções -->
         <div class="h-spacer-lg"></div>
-        <div class="pacient-evolution-container">
-
-          <div class="pacient-evolution-history-card">
-            <div class="pacient-evolution-history-header">
-                <h4>Evolucao #1 : 10:30</h4>
-                <p>Data: 12/12/2023</p>
-            </div>
-            <div class="pacient-evolution-history-body">
-                <h5>Estado: Estavel</h5>
-                <p>Estavel</p>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Sintomas: Estavel</h5>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Exame Fisico: Estavel</h5>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Conduta: Estavel</h5>
-            </div>
-          </div>
-
-          <div class="spacer-md"></div>
-
-          <div class="pacient-evolution-history-card">
-            <div class="pacient-evolution-history-header">
-                <h4>Evolucao #1 : 10:30</h4>
-                <p>Data: 12/12/2023</p>
-            </div>
-            <div class="pacient-evolution-history-body">
-                <h5>Estado: Estavel</h5>
-                <p>Estavel</p>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Sintomas: Estavel</h5>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Exame Fisico: Estavel</h5>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Conduta: Estavel</h5>
-            </div>
-          </div>
-
-          <div class="pacient-evolution-history-card">
-            <div class="pacient-evolution-history-header">
-                <h4>Evolucao #1 : 10:30</h4>
-                <p>Data: 12/12/2023</p>
-            </div>
-            <div class="pacient-evolution-history-body">
-                <h5>Estado: Estavel</h5>
-                <p>Estavel</p>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Sintomas: Estavel</h5>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Exame Fisico: Estavel</h5>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Conduta: Estavel</h5>
-            </div>
-          </div>
-          <div class="spacer-md"></div>
-
-           <div class="pacient-evolution-history-card">
-            <div class="pacient-evolution-history-header">
-                <h4>Evolucao #1 : 10:30</h4>
-                <p>Data: 12/12/2023</p>
-            </div>
-            <div class="pacient-evolution-history-body">
-                <h5>Estado: Estavel</h5>
-                <p>Estavel</p>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Sintomas: Estavel</h5>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Exame Fisico: Estavel</h5>
-                <hr style="border: 1px solid rgb(186, 186, 186)" />
-                <h5>Conduta: Estavel</h5>
-            </div>
-          </div>
-          <div class="spacer-md"></div>
-
-          
-
-          <!-- Acaba aqui -->
-
+        <div class="pacient-evolution-container" id="evolucoes-container">
+          <p class="content-text" style="opacity: 0.5; padding: 1rem;">
+            Aguardando comando da Alexa...
+          </p>
         </div>
-        
+
         <div class="vertical-line-lg"></div>
         <div class="h-spacer-lg"></div>
+
+        <!-- coluna direita — sensores -->
         <div class="esp-information-containers">
-            
-            <div class="sensor-card-container">
-                <div style="display: flex; justify-content: space-between;">
-                    <h5>Temperatura</h5>
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M320 64C267 64 224 107 224 160L224 324.7C194.5 351 176 389.4 176 432C176 511.5 240.5 576 320 576C399.5 576 464 511.5 464 432C464 389.4 445.5 351 416 324.7L416 160C416 107 373 64 320 64zM384 432C384 467.3 355.3 496 320 496C284.7 496 256 467.3 256 432C256 405.1 272.5 382.1 296 372.7L296 160C296 146.7 306.7 136 320 136C333.3 136 344 146.7 344 160L344 372.7C367.5 382.2 384 405.2 384 432z"/></svg>
-                </div>
-                <p>8000 graus</p>
+
+          <div class="sensor-card-container">
+            <div style="display: flex; justify-content: space-between;">
+              <h5>Temperatura</h5>
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                <path d="M320 64C267 64 224 107 224 160L224 324.7C194.5 351 176 389.4 176 432C176 511.5 240.5 576 320 576C399.5 576 464 511.5 464 432C464 389.4 445.5 351 416 324.7L416 160C416 107 373 64 320 64zM384 432C384 467.3 355.3 496 320 496C284.7 496 256 467.3 256 432C256 405.1 272.5 382.1 296 372.7L296 160C296 146.7 306.7 136 320 136C333.3 136 344 146.7 344 160L344 372.7C367.5 382.2 384 405.2 384 432z"/>
+              </svg>
             </div>
-            <div class="sensor-card-container">
-                <div style="display: flex; justify-content: space-between;">
-                    <h5>Umidade</h5>
-                    <svg class="icon"  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M320 576C214 576 128 490 128 384C128 292.8 258.2 109.9 294.6 60.5C300.5 52.5 309.8 48 319.8 48L320.2 48C330.2 48 339.5 52.5 345.4 60.5C381.8 109.9 512 292.8 512 384C512 490 426 576 320 576zM240 376C240 362.7 229.3 352 216 352C202.7 352 192 362.7 192 376C192 451.1 252.9 512 328 512C341.3 512 352 501.3 352 488C352 474.7 341.3 464 328 464C279.4 464 240 424.6 240 376z"/></svg>
-                </div>
-                <p>8000 graus</p>
+            <p id="temperatura">-</p>
+          </div>
+
+          <div class="sensor-card-container">
+            <div style="display: flex; justify-content: space-between;">
+              <h5>Umidade</h5>
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                <path d="M320 576C214 576 128 490 128 384C128 292.8 258.2 109.9 294.6 60.5C300.5 52.5 309.8 48 319.8 48L320.2 48C330.2 48 339.5 52.5 345.4 60.5C381.8 109.9 512 292.8 512 384C512 490 426 576 320 576zM240 376C240 362.7 229.3 352 216 352C202.7 352 192 362.7 192 376C192 451.1 252.9 512 328 512C341.3 512 352 501.3 352 488C352 474.7 341.3 464 328 464C279.4 464 240 424.6 240 376z"/>
+              </svg>
             </div>
-            <div class="sensor-card-container">
-                <div style="display: flex; justify-content: space-between;">
-                    <h5>Luminosidade</h5>
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M424.5 355.1C449 329.2 464 294.4 464 256C464 176.5 399.5 112 320 112C240.5 112 176 176.5 176 256C176 294.4 191 329.2 215.5 355.1C236.8 377.5 260.4 409.1 268.8 448L371.2 448C379.6 409 403.2 377.5 424.5 355.1zM459.3 388.1C435.7 413 416 443.4 416 477.7L416 496C416 540.2 380.2 576 336 576L304 576C259.8 576 224 540.2 224 496L224 477.7C224 443.4 204.3 413 180.7 388.1C148 353.7 128 307.2 128 256C128 150 214 64 320 64C426 64 512 150 512 256C512 307.2 492 353.7 459.3 388.1zM272 248C272 261.3 261.3 272 248 272C234.7 272 224 261.3 224 248C224 199.4 263.4 160 312 160C325.3 160 336 170.7 336 184C336 197.3 325.3 208 312 208C289.9 208 272 225.9 272 248z"/></svg>
-                </div>
-                <p>8000 graus</p>
+            <p id="umidade">-</p>
+          </div>
+
+          <div class="sensor-card-container">
+            <div style="display: flex; justify-content: space-between;">
+              <h5>Luminosidade</h5>
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                <path d="M424.5 355.1C449 329.2 464 294.4 464 256C464 176.5 399.5 112 320 112C240.5 112 176 176.5 176 256C176 294.4 191 329.2 215.5 355.1C236.8 377.5 260.4 409.1 268.8 448L371.2 448C379.6 409 403.2 377.5 424.5 355.1zM459.3 388.1C435.7 413 416 443.4 416 477.7L416 496C416 540.2 380.2 576 336 576L304 576C259.8 576 224 540.2 224 496L224 477.7C224 443.4 204.3 413 180.7 388.1C148 353.7 128 307.2 128 256C128 150 214 64 320 64C426 64 512 150 512 256C512 307.2 492 353.7 459.3 388.1zM272 248C272 261.3 261.3 272 248 272C234.7 272 224 261.3 224 248C224 199.4 263.4 160 312 160C325.3 160 336 170.7 336 184C336 197.3 325.3 208 312 208C289.9 208 272 225.9 272 248z"/>
+              </svg>
             </div>
+            <p id="luminosidade">-</p>
+          </div>
+
         </div>
 
-        <!-- <div class="h-spacer-lg"></div> -->
       </div>
     </div>
+
+    <script src="script.js"></script>
   </body>
 </html>

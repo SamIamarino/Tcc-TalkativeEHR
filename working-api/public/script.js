@@ -1,72 +1,140 @@
 // ============================================================
-// sensor.js
-// Script do frontend para atualizar os dados na tela
-// automaticamente quando a Alexa acionar um quarto
-// ============================================================
-// Como usar:
-//   Inclua este script no seu HTML:
-//   <script src="sensor.js"></script>
-//
-// Elementos HTML necessários (com esses IDs):
-//   <span id="quarto-ativo"></span>
-//   <span id="temperatura"></span>
-//   <span id="umidade"></span>
-//   <span id="luminosidade"></span>
-//   <span id="atualizado"></span>
-//   <span id="status-conexao"></span>
+// sensor.js — Talkative EHR
+// Detecta o quarto ativo via Alexa e atualiza o front
 // ============================================================
 
-const API_BASE = "http://192.168.1.100:3000";
-const API_KEY  = "tPmAT5Ab3j7F9";
+const API_BASE = "http://localhost:3000";
 
-let intervaloSensor = null; // polling dos dados do sensor
-let quartoAtualId   = null; // quarto que está sendo monitorado
+let intervaloSensor = null;
+let quartoAtualId   = null;
 
 // ------------------------------------------------------------
-// Consulta o /status a cada 3s para saber qual quarto
-// a Alexa ativou e inicia o polling de dados automaticamente
+// Consulta /status a cada 3s
+// Quando o quarto mudar, recarrega tudo
 // ------------------------------------------------------------
 setInterval(async () => {
   try {
     const res    = await fetch(`${API_BASE}/status`);
     const status = await res.json();
 
-    // Só age se o quarto mudou
     if (status.quarto_id !== quartoAtualId) {
       quartoAtualId = status.quarto_id;
 
       if (quartoAtualId) {
-        console.log(`[Status] Alexa ativou quarto ${quartoAtualId}`);
-        atualizarStatusConexao(`Monitorando quarto ${quartoAtualId}`, "ativo");
+        const pacienteId = await buscarPaciente(quartoAtualId);
+        if (pacienteId) await buscarEvolucoes(pacienteId);
         iniciarPolling(quartoAtualId);
       } else {
-        console.log("[Status] Nenhum quarto ativo");
-        atualizarStatusConexao("Aguardando comando da Alexa...", "inativo");
         pararPolling();
+        limparTela();
       }
     }
 
   } catch (err) {
-    console.error("[Status] Erro ao consultar /status:", err);
-    atualizarStatusConexao("Sem conexão com a API", "erro");
+    console.error("[Status] Erro:", err);
   }
 }, 3000);
 
 // ------------------------------------------------------------
-// Inicia o polling de dados do sensor para o quarto ativo
+// Busca dados do paciente e preenche os cards da esquerda
+// Retorna o paciente_id para buscar as evoluções
 // ------------------------------------------------------------
-function iniciarPolling(quartoId) {
-  // Cancela o polling anterior
-  pararPolling();
+async function buscarPaciente(quartoId) {
+  try {
+    const res = await fetch(`${API_BASE}/paciente/${quartoId}`);
 
-  // Busca imediatamente e depois a cada 5s
-  buscarDados(quartoId);
-  intervaloSensor = setInterval(() => buscarDados(quartoId), 5000);
+    if (!res.ok) return null;
+
+    const dados = await res.json();
+    const p     = dados.paciente;
+    const l     = dados.leito;
+    const m     = dados.medico;
+
+    // Card paciente
+    setText("paciente-nome",                p.nome              ?? "-");
+    setText("paciente-idade",               calcularIdade(p.data_nascimento));
+    setText("paciente-sangue",              p.tipo_sanguineo    ?? "-");
+    setText("paciente-alergias",            p.alergias          ?? "Nenhuma");
+    setText("paciente-internado",           formatarData(p.internado_em));
+    setText("paciente-contato-emergencia",  p.contato_emergencia  ?? "-");
+    setText("paciente-telefone-emergencia", p.telefone_emergencia ?? "-");
+
+    // Leito
+    setText("leito-numero", l.numero ?? "-");
+    setText("leito-ala",    l.ala    ?? "-");
+    setText("leito-andar",  l.andar  ?? "-");
+
+    // Card médico
+    setText("medico-nome",          m.nome          ?? "-");
+    setText("medico-especialidade", m.especialidade ?? "-");
+    setText("medico-telefone",      m.telefone      ?? "-");
+
+    return p.id;
+
+  } catch (err) {
+    console.error("[Paciente] Erro:", err);
+    return null;
+  }
 }
 
 // ------------------------------------------------------------
-// Para o polling de dados
+// Busca evoluções e renderiza os cards na coluna do meio
 // ------------------------------------------------------------
+async function buscarEvolucoes(pacienteId) {
+  const container = document.getElementById("evolucoes-container");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/evolucao/${pacienteId}`);
+
+    if (!res.ok) {
+      container.innerHTML = `<p class="content-text" style="opacity:0.5;padding:1rem;">Nenhuma evolução encontrada.</p>`;
+      return;
+    }
+
+    const dados = await res.json();
+    container.innerHTML = "";
+
+    dados.evolucoes.forEach((ev, i) => {
+      const hora = new Date(ev.registrado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const data = new Date(ev.registrado_em).toLocaleDateString("pt-BR");
+
+      const card = document.createElement("div");
+      card.className = "pacient-evolution-history-card";
+      card.innerHTML = `
+        <div class="pacient-evolution-history-header">
+          <h4>Evolução #${i + 1} : ${hora}</h4>
+          <p>Data: ${data}</p>
+        </div>
+        <div class="pacient-evolution-history-body">
+          <h5>Médico: ${ev.medico ?? "Não informado"}</h5>
+          <hr style="border: 1px solid rgb(186,186,186)" />
+          <p>${ev.observacao}</p>
+        </div>
+      `;
+      container.appendChild(card);
+
+      if (i < dados.evolucoes.length - 1) {
+        const spacer = document.createElement("div");
+        spacer.className = "spacer-md";
+        container.appendChild(spacer);
+      }
+    });
+
+  } catch (err) {
+    console.error("[Evoluções] Erro:", err);
+  }
+}
+
+// ------------------------------------------------------------
+// Polling dos sensores a cada 5s
+// ------------------------------------------------------------
+function iniciarPolling(quartoId) {
+  pararPolling();
+  buscarSensores(quartoId);
+  intervaloSensor = setInterval(() => buscarSensores(quartoId), 5000);
+}
+
 function pararPolling() {
   if (intervaloSensor) {
     clearInterval(intervaloSensor);
@@ -74,34 +142,42 @@ function pararPolling() {
   }
 }
 
-// ------------------------------------------------------------
-// Busca os dados do sensor na API e atualiza a tela
-// ------------------------------------------------------------
-async function buscarDados(quartoId) {
+async function buscarSensores(quartoId) {
   try {
-    const res = await fetch(`${API_BASE}/sensor/${quartoId}`, {
-      headers: { "x-api-key": API_KEY }
-    });
+    const res = await fetch(`${API_BASE}/sensor/${quartoId}`);
 
-    if (!res.ok) {
-      console.warn(`[Sensor] API retornou ${res.status} para quarto ${quartoId}`);
-      return;
-    }
+    if (!res.ok) return;
 
     const dados  = await res.json();
-    const ultima = dados.leituras[0]; // leitura mais recente
+    const ultima = dados.leituras[0];
 
-    // Atualiza os elementos na tela
-    setText("quarto-ativo",   `Quarto ${quartoId}`);
-    setText("temperatura",    `${ultima.temperatura}°C`);
-    setText("umidade",        `${ultima.umidade}%`);
-    setText("luminosidade",   `${ultima.luminosidade}%`);
-    setText("atualizado",     formatarData(ultima.registrado_em));
-
-    console.log(`[Sensor] Q${quartoId} → Temp: ${ultima.temperatura}°C | Umidade: ${ultima.umidade}% | Lum: ${ultima.luminosidade}%`);
+    setText("temperatura",  ultima.temperatura  != null ? `${ultima.temperatura}°C` : "-");
+    setText("umidade",      ultima.umidade       != null ? `${ultima.umidade}%`      : "-");
+    setText("luminosidade", ultima.luminosidade  != null ? `${ultima.luminosidade}%` : "-");
+    setText("atualizado",   formatarData(ultima.registrado_em));
 
   } catch (err) {
-    console.error("[Sensor] Erro ao buscar dados:", err);
+    console.error("[Sensor] Erro:", err);
+  }
+}
+
+// ------------------------------------------------------------
+// Limpa a tela quando nenhum quarto está ativo
+// ------------------------------------------------------------
+function limparTela() {
+  const ids = [
+    "paciente-nome", "paciente-idade", "paciente-sangue",
+    "paciente-alergias", "paciente-internado",
+    "paciente-contato-emergencia", "paciente-telefone-emergencia",
+    "leito-numero", "leito-ala", "leito-andar",
+    "medico-nome", "medico-especialidade", "medico-telefone",
+    "temperatura", "umidade", "luminosidade", "atualizado",
+  ];
+  ids.forEach(id => setText(id, "-"));
+
+  const container = document.getElementById("evolucoes-container");
+  if (container) {
+    container.innerHTML = `<p class="content-text" style="opacity:0.5;padding:1rem;">Aguardando comando da Alexa...</p>`;
   }
 }
 
@@ -115,13 +191,15 @@ function setText(id, valor) {
 
 function formatarData(dataStr) {
   if (!dataStr) return "-";
-  const d = new Date(dataStr);
-  return d.toLocaleString("pt-BR");
+  return new Date(dataStr).toLocaleString("pt-BR");
 }
 
-function atualizarStatusConexao(mensagem, estado) {
-  const el = document.getElementById("status-conexao");
-  if (!el) return;
-  el.textContent = mensagem;
-  el.className   = `status-${estado}`; // aplique estilos via CSS: .status-ativo, .status-inativo, .status-erro
+function calcularIdade(dataNasc) {
+  if (!dataNasc) return "-";
+  const hoje  = new Date();
+  const nasc  = new Date(dataNasc);
+  let idade   = hoje.getFullYear() - nasc.getFullYear();
+  const m     = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+  return `${idade} anos`;
 }
