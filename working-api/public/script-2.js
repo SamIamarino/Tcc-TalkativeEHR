@@ -1,6 +1,5 @@
 // ============================================================
-// sensor.js — Talkative EHR
-// Detecta o quarto ativo via Alexa e atualiza o front
+// sensor.js
 // ============================================================
 
 const API_BASE = "http://localhost:3000";
@@ -8,19 +7,19 @@ const API_BASE = "http://localhost:3000";
 let intervaloSensor = null;
 let quartoAtualId   = null;
 
-// ------------------------------------------------------------
-// Consulta /status a cada 3s
-// Quando o quarto mudar, recarrega tudo
-// ------------------------------------------------------------
+// Consulta /status a cada 1s
 setInterval(async () => {
   try {
-    const res    = await fetch(`${API_BASE}/status`);
+    const res    = await fetch(`${API_BASE}/status`, { cache: "no-store" });
     const status = await res.json();
+    const novoQuarto = status.quarto_id ?? null;
 
-    if (status.quarto_id !== quartoAtualId) {
-      quartoAtualId = status.quarto_id;
+    // Só recarrega o front quando o quarto MUDAR
+    if (novoQuarto !== quartoAtualId) {
+      quartoAtualId = novoQuarto;
 
       if (quartoAtualId) {
+        console.log(`[Status] Mudou para quarto ${quartoAtualId}`);
         const pacienteId = await buscarPaciente(quartoAtualId);
         if (pacienteId) await buscarEvolucoes(pacienteId);
         iniciarPolling(quartoAtualId);
@@ -36,21 +35,18 @@ setInterval(async () => {
 }, 1000);
 
 // ------------------------------------------------------------
-// Busca dados do paciente e preenche os cards da esquerda
-// Retorna o paciente_id para buscar as evoluções
+// Busca paciente e preenche os cards
 // ------------------------------------------------------------
 async function buscarPaciente(quartoId) {
   try {
-    const res = await fetch(`${API_BASE}/paciente/${quartoId}`);
-
+    const res = await fetch(`${API_BASE}/paciente/${quartoId}`, { cache: "no-store" });
     if (!res.ok) return null;
 
     const dados = await res.json();
-    const p     = dados.paciente;
-    const l     = dados.leito;
-    const m     = dados.medico;
+    const p = dados.paciente;
+    const l = dados.leito;
+    const m = dados.medico;
 
-    // Card paciente
     setText("paciente-nome",                p.nome              ?? "-");
     setText("paciente-idade",               calcularIdade(p.data_nascimento));
     setText("paciente-sangue",              p.tipo_sanguineo    ?? "-");
@@ -59,12 +55,10 @@ async function buscarPaciente(quartoId) {
     setText("paciente-contato-emergencia",  p.contato_emergencia  ?? "-");
     setText("paciente-telefone-emergencia", p.telefone_emergencia ?? "-");
 
-    // Leito
     setText("leito-numero", l.numero ?? "-");
     setText("leito-ala",    l.ala    ?? "-");
     setText("leito-andar",  l.andar  ?? "-");
 
-    // Card médico
     setText("medico-nome",          m.nome          ?? "-");
     setText("medico-especialidade", m.especialidade ?? "-");
     setText("medico-telefone",      m.telefone      ?? "-");
@@ -78,14 +72,14 @@ async function buscarPaciente(quartoId) {
 }
 
 // ------------------------------------------------------------
-// Busca evoluções e renderiza os cards na coluna do meio
+// Busca evoluções
 // ------------------------------------------------------------
 async function buscarEvolucoes(pacienteId) {
   const container = document.getElementById("evolucoes-container");
   if (!container) return;
 
   try {
-    const res = await fetch(`${API_BASE}/evolucao/${pacienteId}`);
+    const res = await fetch(`${API_BASE}/evolucao/${pacienteId}`, { cache: "no-store" });
 
     if (!res.ok) {
       container.innerHTML = `<p class="content-text" style="opacity:0.5;padding:1rem;">Nenhuma evolução encontrada.</p>`;
@@ -127,7 +121,7 @@ async function buscarEvolucoes(pacienteId) {
 }
 
 // ------------------------------------------------------------
-// Polling dos sensores a cada 5s
+// Polling de sensores a cada 5s
 // ------------------------------------------------------------
 function iniciarPolling(quartoId) {
   pararPolling();
@@ -144,8 +138,7 @@ function pararPolling() {
 
 async function buscarSensores(quartoId) {
   try {
-    const res = await fetch(`${API_BASE}/sensor/${quartoId}`);
-
+    const res = await fetch(`${API_BASE}/sensor/${quartoId}`, { cache: "no-store" });
     if (!res.ok) return;
 
     const dados  = await res.json();
@@ -162,7 +155,7 @@ async function buscarSensores(quartoId) {
 }
 
 // ------------------------------------------------------------
-// Limpa a tela quando nenhum quarto está ativo
+// Limpa tela
 // ------------------------------------------------------------
 function limparTela() {
   const ids = [
@@ -196,10 +189,10 @@ function formatarData(dataStr) {
 
 function calcularIdade(dataNasc) {
   if (!dataNasc) return "-";
-  const hoje  = new Date();
-  const nasc  = new Date(dataNasc);
-  let idade   = hoje.getFullYear() - nasc.getFullYear();
-  const m     = hoje.getMonth() - nasc.getMonth();
+  const hoje = new Date();
+  const nasc = new Date(dataNasc);
+  let idade  = hoje.getFullYear() - nasc.getFullYear();
+  const m    = hoje.getMonth() - nasc.getMonth();
   if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
   return `${idade} anos`;
 }
