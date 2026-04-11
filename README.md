@@ -6,7 +6,7 @@ Sistema de monitoramento de quartos hospitalares via ESP32 + Alexa com frontend 
 
 ## Diagrama do Sistema
 
-<img src="./ajax_polling_flow.svg" alt="Diagrama do sistema">
+<img src="./talkative_ehr_flow.svg" alt="Diagrama do sistema">
 
 ---
 
