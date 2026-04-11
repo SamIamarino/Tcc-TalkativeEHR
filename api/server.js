@@ -91,8 +91,8 @@ app.post("/sensor", validarApiKey, async (req, res) => {
   }
 
   // Atualiza o quarto ativo baseado no status enviado pelo ESP32
-  quartoAtivo = status === "desligado" ? null : quarto_id;
-  console.log(`[Status] Quarto ativo: ${quartoAtivo ?? "nenhum"}`);
+  // quartoAtivo = status === "desligado" ? null : quarto_id;
+  // console.log(`[Status] Quarto ativo: ${quartoAtivo ?? "nenhum"}`);
 
   try {
     const [pacientes] = await db.query(
@@ -265,7 +265,7 @@ app.get("/status", (req, res) => {
 // ------------------------------------------------------------
 // Qualquer rota não encontrada serve o index.html do frontend
 // ------------------------------------------------------------
-app.get("*", (req, res) => {
+app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 

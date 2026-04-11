@@ -1,10 +1,13 @@
 // ============================================================
 // server.js
 // API Express para receber dados do ESP32 e salvar no MySQL
+// + Hospedagem do frontend estático na pasta /public
+//
 // Endpoints:
 //   POST /sensor              → registra leitura do sensor no banco
 //   GET  /sensor/:quarto_id   → retorna leituras do quarto
 //   GET  /paciente/:quarto_id → retorna dados do paciente no quarto
+//   GET  /evolucao/:paciente_id → retorna evoluções do paciente
 //   GET  /status              → retorna o quarto ativo no momento
 // ============================================================
 // Dependências:
@@ -12,12 +15,20 @@
 // ============================================================
 
 const express = require("express");
+const path    = require("path");
 const mysql   = require("mysql2/promise");
 
 const app = express();
 app.use(express.json());
 
-// Permite o frontend acessar a API (CORS)
+// ------------------------------------------------------------
+// Serve o frontend estático da pasta /public
+// ------------------------------------------------------------
+app.use(express.static(path.join(__dirname, "public")));
+
+// ------------------------------------------------------------
+// CORS — permite o frontend acessar a API
+// ------------------------------------------------------------
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Content-Type, x-api-key");
@@ -32,8 +43,8 @@ const API_KEY = "tPmAT5Ab3j7F9";
 
 const DB_CONFIG = {
   host     : "localhost",
-  user     : "esp32",
-  password : "esp32mysql",
+  user     : "root",
+  password : "",
   database : "hospital_iot",
 };
 
@@ -59,26 +70,25 @@ async function conectarBanco() {
 // ------------------------------------------------------------
 // Middleware: valida API Key
 // ------------------------------------------------------------
-function validarApiKey(req, res, next) {
-  const chave = req.headers["x-api-key"] || req.body?.api_key;
-  if (chave !== API_KEY) {
-    return res.status(401).json({ erro: "API Key inválida ou ausente." });
-  }
-  next();
-}
+// function validarApiKey(req, res, next) {
+//   const chave = req.headers["x-api-key"] || req.body?.api_key;
+//   if (chave !== API_KEY) {
+//     return res.status(401).json({ erro: "API Key inválida ou ausente." });
+//   }
+//   next();
+// }
 
 // ------------------------------------------------------------
 // POST /sensor
 // Recebe dados do ESP32 e salva em LeituraSensor
 // ------------------------------------------------------------
-app.post("/sensor", validarApiKey, async (req, res) => {
+app.post("/sensor", async (req, res) => {
   const { quarto_id, temperatura, umidade, luminosidade, status } = req.body;
 
   if (!quarto_id) {
     return res.status(400).json({ erro: "Campo 'quarto_id' é obrigatório." });
   }
 
-  // Atualiza o quarto ativo baseado no status enviado pelo ESP32
   quartoAtivo = status === "desligado" ? null : quarto_id;
   console.log(`[Status] Quarto ativo: ${quartoAtivo ?? "nenhum"}`);
 
@@ -126,7 +136,7 @@ app.post("/sensor", validarApiKey, async (req, res) => {
 // GET /sensor/:quarto_id
 // Retorna as últimas 20 leituras do quarto informado
 // ------------------------------------------------------------
-app.get("/sensor/:quarto_id", validarApiKey, async (req, res) => {
+app.get("/sensor/:quarto_id", async (req, res) => {
   const quarto_id = parseInt(req.params.quarto_id);
 
   if (isNaN(quarto_id)) {
@@ -168,7 +178,7 @@ app.get("/sensor/:quarto_id", validarApiKey, async (req, res) => {
 // GET /paciente/:quarto_id
 // Retorna os dados do paciente internado no quarto informado
 // ------------------------------------------------------------
-app.get("/paciente/:quarto_id", validarApiKey, async (req, res) => {
+app.get("/paciente/:quarto_id", async (req, res) => {
   const quarto_id = parseInt(req.params.quarto_id);
 
   if (isNaN(quarto_id)) {
@@ -180,7 +190,7 @@ app.get("/paciente/:quarto_id", validarApiKey, async (req, res) => {
       `SELECT
          p.id,
          p.nome_completo,
-         p.data_nascimento,u
+         p.data_nascimento,
          p.sexo,
          p.tipo_sanguineo,
          p.alergias,
@@ -213,16 +223,16 @@ app.get("/paciente/:quarto_id", validarApiKey, async (req, res) => {
     return res.status(200).json({
       quarto_id,
       paciente: {
-        id               : p.id,
-        nome             : p.nome_completo,
-        data_nascimento  : p.data_nascimento,
-        sexo             : p.sexo,
-        tipo_sanguineo   : p.tipo_sanguineo,
-        alergias         : p.alergias,
-        telefone         : p.telefone,
+        id                  : p.id,
+        nome                : p.nome_completo,
+        data_nascimento     : p.data_nascimento,
+        sexo                : p.sexo,
+        tipo_sanguineo      : p.tipo_sanguineo,
+        alergias            : p.alergias,
+        telefone            : p.telefone,
         contato_emergencia  : p.contato_emergencia,
         telefone_emergencia : p.telefone_emergencia,
-        internado_em     : p.internado_em,
+        internado_em        : p.internado_em,
       },
       leito: {
         numero : p.numero_leito,
@@ -243,6 +253,45 @@ app.get("/paciente/:quarto_id", validarApiKey, async (req, res) => {
 });
 
 // ------------------------------------------------------------
+// GET /evolucao/:paciente_id
+// Retorna todas as evoluções do paciente informado
+// ------------------------------------------------------------
+app.get("/evolucao/:paciente_id", async (req, res) => {
+  const paciente_id = parseInt(req.params.paciente_id);
+
+  if (isNaN(paciente_id)) {
+    return res.status(400).json({ erro: "paciente_id inválido." });
+  }
+
+  try {
+    const [evolucoes] = await db.query(
+      `SELECT
+         ep.id,
+         ep.observacao,
+         ep.registrado_em,
+         m.nome_completo AS medico
+       FROM EvolucaoPaciente ep
+       LEFT JOIN Medico m ON ep.medico_id = m.id
+       WHERE ep.paciente_id = ?
+       ORDER BY ep.registrado_em DESC`,
+      [paciente_id]
+    );
+
+    if (evolucoes.length === 0) {
+      return res.status(404).json({
+        mensagem: `Nenhuma evolução encontrada para o paciente ${paciente_id}.`,
+      });
+    }
+
+    return res.status(200).json({ paciente_id, total: evolucoes.length, evolucoes });
+
+  } catch (err) {
+    console.error(`[GET /evolucao/${paciente_id}] Erro:`, err.message);
+    return res.status(500).json({ erro: "Erro interno ao buscar evoluções." });
+  }
+});
+
+// ------------------------------------------------------------
 // GET /status
 // Retorna qual quarto está ativo no momento (ativado pela Alexa)
 // ------------------------------------------------------------
@@ -251,15 +300,24 @@ app.get("/status", (req, res) => {
 });
 
 // ------------------------------------------------------------
+// Qualquer rota não encontrada serve o index.html do frontend
+// ------------------------------------------------------------
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index2.html"));
+});
+
+// ------------------------------------------------------------
 // Inicia o servidor
 // ------------------------------------------------------------
 conectarBanco().then(() => {
   app.listen(PORT, () => {
     console.log(`[API] Servidor rodando em http://localhost:${PORT}`);
-    console.log(`[API] Endpoints disponíveis:`);
+    console.log(`[API] Frontend disponível em http://localhost:${PORT}/`);
+    console.log(`[API] Endpoints:`);
     console.log(`        POST http://localhost:${PORT}/sensor`);
     console.log(`        GET  http://localhost:${PORT}/sensor/:quarto_id`);
     console.log(`        GET  http://localhost:${PORT}/paciente/:quarto_id`);
+    console.log(`        GET  http://localhost:${PORT}/evolucao/:paciente_id`);
     console.log(`        GET  http://localhost:${PORT}/status`);
   });
 });
