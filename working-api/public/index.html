@@ -5,9 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Talkative EHR</title>
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      #waiting-screen {
+        position: fixed;
+        inset: 0;
+        background: #f8f8f6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        z-index: 100;
+        transition: opacity 0.6s ease, visibility 0.6s ease;
+      }
+
+      #waiting-screen.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .waiting-logo {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 2.8rem;
+        font-weight: 700;
+        letter-spacing: -1px;
+        color: #111;
+      }
+
+      .waiting-logo span { color: #2e7d5e; }
+
+      .waiting-divider {
+        width: 48px;
+        height: 2px;
+        background: #2e7d5e;
+        border-radius: 2px;
+      }
+
+      .waiting-instruction {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .waiting-instruction p {
+        font-family: Georgia, serif;
+        font-size: 1.1rem;
+        color: #555;
+      }
+
+      .waiting-commands {
+        display: flex;
+        gap: 16px;
+        margin-top: 4px;
+      }
+
+      .waiting-command-pill {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 100px;
+        padding: 8px 20px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        color: #2e7d5e;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+
+      .waiting-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #e8f4ef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2.4s ease-in-out infinite;
+      }
+
+      .waiting-icon svg {
+        width: 28px;
+        height: 28px;
+        fill: #2e7d5e;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(46,125,94,0.2); }
+        50%       { transform: scale(1.06); box-shadow: 0 0 0 12px rgba(46,125,94,0); }
+      }
+    </style>
   </head>
   <body>
-    <div class="wrapper">
+
+    <!-- TELA DE ESPERA -->
+    <div id="waiting-screen">
+      <div class="waiting-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+          <path d="M320 400C373 400 416 357 416 304L416 144C416 91 373 48 320 48C267 48 224 91 224 144L224 304C224 357 267 400 320 400zM160 304C160 391.5 232.5 464 320 464C407.5 464 480 391.5 480 304L528 304C528 412.5 450 502.5 348 590L348 592L292 592L292 590C190 502.5 112 412.5 112 304L160 304z"/>
+        </svg>
+      </div>
+      <div class="waiting-logo">Talkative<span>EHR</span></div>
+      <div class="waiting-divider"></div>
+      <div class="waiting-instruction">
+        <p>Peça para a Alexa ativar um quarto</p>
+        <div class="waiting-commands">
+          <span class="waiting-command-pill">"Alexa, quarto um ligar"</span>
+          <span class="waiting-command-pill">"Alexa, quarto dois ligar"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRONTUÁRIO -->
+    <div class="wrapper" id="prontuario" style="display:none;">
       <div class="main-container">
 
         <!-- container esquerda -->
@@ -24,11 +133,7 @@
           <div class="pacient-personal-information user-card">
             <div class="img-name-container">
               <div class="user-profile-wrapper">
-                <img
-                  src="./assets/Weezer_-_Blue_Album.jpg"
-                  alt="imagem do paciente"
-                  class="profile-img"
-                />
+                <img src="./assets/Weezer_-_Blue_Album.jpg" alt="imagem do paciente" class="profile-img"/>
               </div>
               <div class="user-information-wrapper">
                 <h4 class="title-text" id="paciente-nome">-</h4>
@@ -77,11 +182,7 @@
           <div class="pacient-internation-information user-card">
             <div class="img-name-container">
               <div class="user-profile-wrapper">
-                <img
-                  src="./assets/Weezer_-_Blue_Album.jpg"
-                  alt="médico responsável"
-                  class="profile-img"
-                />
+                <img src="./assets/Weezer_-_Blue_Album.jpg" alt="médico responsável" class="profile-img"/>
               </div>
               <div class="user-information-wrapper">
                 <h4 class="title-text" id="medico-nome">-</h4>
@@ -97,10 +198,9 @@
 
         <!-- coluna do meio — evoluções -->
         <div class="h-spacer-lg"></div>
+        
         <div class="pacient-evolution-container" id="evolucoes-container">
-          <p class="content-text" style="opacity: 0.5; padding: 1rem;">
-            Aguardando comando da Alexa...
-          </p>
+          
         </div>
 
         <div class="vertical-line-lg"></div>
@@ -145,5 +245,22 @@
     </div>
 
     <script src="script-2.js"></script>
+    <script>
+      const waitingScreen = document.getElementById("waiting-screen");
+      const prontuario    = document.getElementById("prontuario");
+
+      function mostrarProntuario() {
+        waitingScreen.classList.add("hidden");
+        prontuario.style.display = "flex";
+      }
+
+      function mostrarEspera() {
+        waitingScreen.classList.remove("hidden");
+        prontuario.style.display = "none";
+      }
+
+      window.onDadosCarregados = mostrarProntuario;
+      window.onDadosLimpos     = mostrarEspera;
+    </script>
   </body>
 </html>

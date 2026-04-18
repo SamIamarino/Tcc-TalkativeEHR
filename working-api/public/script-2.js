@@ -1,31 +1,30 @@
-// ============================================================
-// sensor.js
-// ============================================================
-
 const API_BASE = "http://localhost:3000";
 
-let intervaloSensor = null;
-let quartoAtualId   = null;
+let intervaloSensor  = null;
+let quartoAtualId    = null;
+let primeiraExecucao = true;
 
-// Consulta /status a cada 1s
 setInterval(async () => {
   try {
-    const res    = await fetch(`${API_BASE}/status`, { cache: "no-store" });
-    const status = await res.json();
+    const res        = await fetch(`${API_BASE}/status`, { cache: "no-store" });
+    const status     = await res.json();
     const novoQuarto = status.quarto_id ?? null;
 
-    // Só recarrega o front quando o quarto MUDAR
-    if (novoQuarto !== quartoAtualId) {
-      quartoAtualId = novoQuarto;
+    if (novoQuarto !== quartoAtualId || primeiraExecucao) {
+      primeiraExecucao = false;
+      quartoAtualId    = novoQuarto;
 
       if (quartoAtualId) {
-        console.log(`[Status] Mudou para quarto ${quartoAtualId}`);
         const pacienteId = await buscarPaciente(quartoAtualId);
         if (pacienteId) await buscarEvolucoes(pacienteId);
         iniciarPolling(quartoAtualId);
+        // Mostra prontuário e esconde tela de espera
+        if (window.onDadosCarregados) window.onDadosCarregados();
       } else {
         pararPolling();
         limparTela();
+        // Mostra tela de espera
+        if (window.onDadosLimpos) window.onDadosLimpos();
       }
     }
 
@@ -34,9 +33,6 @@ setInterval(async () => {
   }
 }, 1000);
 
-// ------------------------------------------------------------
-// Busca paciente e preenche os cards
-// ------------------------------------------------------------
 async function buscarPaciente(quartoId) {
   try {
     const res = await fetch(`${API_BASE}/paciente/${quartoId}`, { cache: "no-store" });
@@ -71,9 +67,6 @@ async function buscarPaciente(quartoId) {
   }
 }
 
-// ------------------------------------------------------------
-// Busca evoluções
-// ------------------------------------------------------------
 async function buscarEvolucoes(pacienteId) {
   const container = document.getElementById("evolucoes-container");
   if (!container) return;
@@ -120,9 +113,6 @@ async function buscarEvolucoes(pacienteId) {
   }
 }
 
-// ------------------------------------------------------------
-// Polling de sensores a cada 5s
-// ------------------------------------------------------------
 function iniciarPolling(quartoId) {
   pararPolling();
   buscarSensores(quartoId);
@@ -154,9 +144,6 @@ async function buscarSensores(quartoId) {
   }
 }
 
-// ------------------------------------------------------------
-// Limpa tela
-// ------------------------------------------------------------
 function limparTela() {
   const ids = [
     "paciente-nome", "paciente-idade", "paciente-sangue",
@@ -174,9 +161,6 @@ function limparTela() {
   }
 }
 
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
 function setText(id, valor) {
   const el = document.getElementById(id);
   if (el) el.textContent = valor;

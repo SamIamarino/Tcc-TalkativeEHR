@@ -303,7 +303,7 @@ app.get("/status", (req, res) => {
 // Qualquer rota não encontrada serve o index.html do frontend
 // ------------------------------------------------------------
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index2.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // ------------------------------------------------------------
