@@ -5,95 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Talkative EHR</title>
     <link rel="stylesheet" href="styles.css" />
-    <style>
-      #waiting-screen {
-        position: fixed;
-        inset: 0;
-        background: #f8f8f6;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 32px;
-        z-index: 100;
-        transition: opacity 0.6s ease, visibility 0.6s ease;
-      }
-
-      #waiting-screen.hidden {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-      }
-
-      .waiting-logo {
-        font-family: Georgia, 'Times New Roman', serif;
-        font-size: 2.8rem;
-        font-weight: 700;
-        letter-spacing: -1px;
-        color: #111;
-      }
-
-      .waiting-logo span { color: #2e7d5e; }
-
-      .waiting-divider {
-        width: 48px;
-        height: 2px;
-        background: #2e7d5e;
-        border-radius: 2px;
-      }
-
-      .waiting-instruction {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .waiting-instruction p {
-        font-family: Georgia, serif;
-        font-size: 1.1rem;
-        color: #555;
-      }
-
-      .waiting-commands {
-        display: flex;
-        gap: 16px;
-        margin-top: 4px;
-      }
-
-      .waiting-command-pill {
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 100px;
-        padding: 8px 20px;
-        font-family: 'Courier New', monospace;
-        font-size: 0.85rem;
-        color: #2e7d5e;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      }
-
-      .waiting-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: #e8f4ef;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: pulse 2.4s ease-in-out infinite;
-      }
-
-      .waiting-icon svg {
-        width: 28px;
-        height: 28px;
-        fill: #2e7d5e;
-      }
-
-      @keyframes pulse {
-        0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(46,125,94,0.2); }
-        50%       { transform: scale(1.06); box-shadow: 0 0 0 12px rgba(46,125,94,0); }
-      }
-    </style>
   </head>
   <body>
 
@@ -198,7 +109,7 @@
 
         <!-- coluna do meio — evoluções -->
         <div class="h-spacer-lg"></div>
-        
+
         <div class="pacient-evolution-container" id="evolucoes-container">
           
         </div>
