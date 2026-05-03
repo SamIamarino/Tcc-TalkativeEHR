@@ -36,6 +36,7 @@ setInterval(async () => {
 async function buscarPaciente(quartoId) {
   try {
     const res = await fetch(`${API_BASE}/paciente/${quartoId}`, { cache: "no-store" });
+    
     if (!res.ok) return null;
 
     const dados = await res.json();
