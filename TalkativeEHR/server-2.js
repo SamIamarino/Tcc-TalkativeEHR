@@ -68,17 +68,6 @@ async function conectarBanco() {
 }
 
 // ------------------------------------------------------------
-// Middleware: valida API Key
-// ------------------------------------------------------------
-// function validarApiKey(req, res, next) {
-//   const chave = req.headers["x-api-key"] || req.body?.api_key;
-//   if (chave !== API_KEY) {
-//     return res.status(401).json({ erro: "API Key inválida ou ausente." });
-//   }
-//   next();
-// }
-
-// ------------------------------------------------------------
 // POST /sensor
 // Recebe dados do ESP32 e salva em LeituraSensor
 // ------------------------------------------------------------

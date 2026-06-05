@@ -1,40 +1,74 @@
+// ============================================================
+// esp32_fauxmo.ino
+// 1 ESP32 → 2 quartos → cada quarto tem 1x DHT11 + 1x LDR
+// Alexa chama "quarto um ligar" ou "quarto dois ligar"
+// ============================================================
+// Bibliotecas:
+//   - fauxmoESP (sivar2311) → https://github.com/sivar2311/fauxmoESP
+//   - DHT sensor library (Adafruit)
+//   - ArduinoJson (Benoit Blanchon)
+//   - WiFi + HTTPClient (built-in ESP32)
+// ============================================================
+
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <fauxmoESP.h>
 #include "DHT.h"
 
+// ------------------------------------------------------------
+// CONFIGURAÇÕES
+// ------------------------------------------------------------
 const char* SSID     = "Cristiane_2.4G";
 const char* PASSWORD = "31071974";
-const char* API_BASE = "http://192.168.0.231:3000";
+const char* API_BASE = "http://192.168.0.124:3000"; // IP do PC com server.js
 
+// --- Pinos Quarto 1 ---
 #define PINO_DHT_Q1   4
 #define PINO_LDR_Q1   34
+
+// --- Pinos Quarto 2 ---
 #define PINO_DHT_Q2   5
 #define PINO_LDR_Q2   35
 
 const int ADC_MAX = 4095;
 const unsigned long INTERVALO = 5000;
 
+// ------------------------------------------------------------
+// Instâncias dos sensores
+// ------------------------------------------------------------
 DHT dhtQ1(PINO_DHT_Q1, DHT11);
 DHT dhtQ2(PINO_DHT_Q2, DHT11);
 
 fauxmoESP fauxmo;
 
+// ------------------------------------------------------------
+// Estado dos quartos — sem structs, sem arrays
+// ------------------------------------------------------------
 bool          q1_ativo  = false;
 unsigned long q1_ultima = 0;
+
 bool          q2_ativo  = false;
 unsigned long q2_ultima = 0;
 
+// ------------------------------------------------------------
+// Flags para processar ação fora do callback
+// ------------------------------------------------------------
 int  quartoAcionadoId    = -1;
 bool quartoAcionadoState = false;
 bool temAcao             = false;
 
+// ------------------------------------------------------------
+// Declarações antecipadas
+// ------------------------------------------------------------
 void lerESalvarQ1();
 void lerESalvarQ2();
 void enviarLeitura(int quartoId, float temperatura, float umidade, int luminosidade, String status);
 void conectarWiFi();
 
+// ------------------------------------------------------------
+// Setup
+// ------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
   delay(100);
@@ -54,6 +88,7 @@ void setup() {
   fauxmo.addDevice("quarto dois");
   Serial.println("[Fauxmo] Dispositivo registrado: 'quarto dois'");
 
+  // Callback — apenas sinaliza, não executa nada pesado aqui
   fauxmo.onSetState([](unsigned char device_id, const char* device_name, bool state, unsigned char value) {
     Serial.printf("\n[Fauxmo] Alexa chamou '%s' → %s\n", device_name, state ? "LIGAR" : "DESLIGAR");
 
@@ -72,9 +107,13 @@ void setup() {
   Serial.println("Fale: 'Alexa, quarto um ligar' ou 'Alexa, quarto dois ligar'");
 }
 
+// ------------------------------------------------------------
+// Loop
+// ------------------------------------------------------------
 void loop() {
   fauxmo.handle();
 
+  // Processa ação da Alexa fora do callback
   if (temAcao) {
     temAcao = false;
 
@@ -90,17 +129,22 @@ void loop() {
     }
   }
 
+  // Leitura periódica quarto 1
   if (q1_ativo && millis() - q1_ultima >= INTERVALO) {
     q1_ultima = millis();
     lerESalvarQ1();
   }
 
+  // Leitura periódica quarto 2
   if (q2_ativo && millis() - q2_ultima >= INTERVALO) {
     q2_ultima = millis();
     lerESalvarQ2();
   }
 }
 
+// ------------------------------------------------------------
+// Lê sensores do Quarto 1 e envia para a API
+// ------------------------------------------------------------
 void lerESalvarQ1() {
   float temperatura = dhtQ1.readTemperature();
   float umidade     = dhtQ1.readHumidity();
@@ -113,9 +157,7 @@ void lerESalvarQ1() {
     umidade     = dhtQ1.readHumidity();
   }
 
-  // ↓↓ MUDANÇA Q1: invertido (100,0) em vez de (0,100)
   int luminosidade = map(ldrRaw, 0, ADC_MAX, 100, 0);
-  luminosidade = constrain(luminosidade, 0, 100);
 
   Serial.printf("[Q1] Temp: %.1f°C | Umidade: %.1f%% | LDR raw: %d | Lum: %d%%\n",
                 temperatura, umidade, ldrRaw, luminosidade);
@@ -123,6 +165,9 @@ void lerESalvarQ1() {
   enviarLeitura(1, temperatura, umidade, luminosidade, "ligado");
 }
 
+// ------------------------------------------------------------
+// Lê sensores do Quarto 2 e envia para a API
+// ------------------------------------------------------------
 void lerESalvarQ2() {
   float temperatura = dhtQ2.readTemperature();
   float umidade     = dhtQ2.readHumidity();
@@ -135,9 +180,7 @@ void lerESalvarQ2() {
     umidade     = dhtQ2.readHumidity();
   }
 
-  // ↓↓ MUDANÇA Q2: invertido (100,0) em vez de (0,100)
   int luminosidade = map(ldrRaw, 0, ADC_MAX, 100, 0);
-  luminosidade = constrain(luminosidade, 0, 100);
 
   Serial.printf("[Q2] Temp: %.1f°C | Umidade: %.1f%% | LDR raw: %d | Lum: %d%%\n",
                 temperatura, umidade, ldrRaw, luminosidade);
@@ -145,6 +188,9 @@ void lerESalvarQ2() {
   enviarLeitura(2, temperatura, umidade, luminosidade, "ligado");
 }
 
+// ------------------------------------------------------------
+// POST /sensor → API Express
+// ------------------------------------------------------------
 void enviarLeitura(int quartoId, float temperatura, float umidade, int luminosidade, String status) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[WiFi] Sem conexão, pulando envio.");
@@ -171,6 +217,9 @@ void enviarLeitura(int quartoId, float temperatura, float umidade, int luminosid
   http.end();
 }
 
+// ------------------------------------------------------------
+// Conecta ao WiFi
+// ------------------------------------------------------------
 void conectarWiFi() {
   WiFi.mode(WIFI_STA);
   Serial.printf("[WiFi] Conectando a %s ", SSID);
